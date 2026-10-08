@@ -25,6 +25,7 @@ import {
   CreateIssueModal,
   CreateBoardModal,
 } from './components/WorkspaceModals';
+import { PlatformGuideModal } from './components/PlatformGuide';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +60,7 @@ function TeamBoardsWorkspaceContent({
   >(undefined);
   const [createBoardOpen, setCreateBoardOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [inviteBannerMessage, setInviteBannerMessage] = useState<string | null>(
     null
   );
@@ -124,6 +126,10 @@ function TeamBoardsWorkspaceContent({
         }
         if (shortcutsOpen) {
           setShortcutsOpen(false);
+          return;
+        }
+        if (guideOpen) {
+          setGuideOpen(false);
           return;
         }
         if (inspectedIssueId) {
@@ -193,6 +199,7 @@ function TeamBoardsWorkspaceContent({
     createIssueOpen,
     createBoardOpen,
     shortcutsOpen,
+    guideOpen,
     inspectedIssueId,
     setInspectedIssueId,
   ]);
@@ -212,6 +219,7 @@ function TeamBoardsWorkspaceContent({
         setCreateIssueOpen(true);
       }}
       onOpenNewBoard={() => setCreateBoardOpen(true)}
+      onOpenGuide={() => setGuideOpen(true)}
       shortcutsOpen={shortcutsOpen}
       setShortcutsOpen={setShortcutsOpen}
       theme={theme}
@@ -236,6 +244,12 @@ function TeamBoardsWorkspaceContent({
             <BoardsOverviewScreen
               onOpenBoard={handleOpenBoard}
               onOpenNewBoardModal={() => setCreateBoardOpen(true)}
+              onOpenNewIssueModal={() => {
+                setCreateIssueListId(undefined);
+                setCreateIssueOpen(true);
+              }}
+              onNavigateView={setActiveView}
+              onOpenFullGuide={() => setGuideOpen(true)}
             />
           )}
 
@@ -306,6 +320,17 @@ function TeamBoardsWorkspaceContent({
           setActiveBoardId(boardId);
           setActiveView('board_detail');
         }}
+      />
+
+      <PlatformGuideModal
+        isOpen={guideOpen}
+        onClose={() => setGuideOpen(false)}
+        onOpenNewBoard={() => setCreateBoardOpen(true)}
+        onOpenNewIssue={() => {
+          setCreateIssueListId(undefined);
+          setCreateIssueOpen(true);
+        }}
+        onNavigateView={setActiveView}
       />
     </AppShell>
   );

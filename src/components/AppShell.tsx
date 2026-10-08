@@ -22,6 +22,7 @@ import {
   Shield,
   Wifi,
   WifiOff,
+  BookOpen,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTeamBoards } from '../contexts/TeamBoardsContext';
@@ -40,6 +41,7 @@ interface AppShellProps {
   onOpenCommandPalette: () => void;
   onOpenNewIssue: () => void;
   onOpenNewBoard: () => void;
+  onOpenGuide: () => void;
   shortcutsOpen: boolean;
   setShortcutsOpen: (open: boolean) => void;
   theme: 'dark' | 'light';
@@ -53,6 +55,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   onOpenCommandPalette,
   onOpenNewIssue,
   onOpenNewBoard,
+  onOpenGuide,
   shortcutsOpen,
   setShortcutsOpen,
   theme,
@@ -696,6 +699,18 @@ export const AppShell: React.FC<AppShellProps> = ({
               ) : (
                 <Moon className="w-4 h-4 text-[var(--accent-primary)]" />
               )}
+            </button>
+
+            {/* Platform Guide Button */}
+            <button
+              type="button"
+              onClick={onOpenGuide}
+              aria-label="Open platform guide"
+              title="How to use Team Boards"
+              className="h-8 px-2.5 rounded-[var(--radius-sm)] bg-[var(--accent-tint)] hover:opacity-90 border border-[var(--accent-primary)]/30 flex items-center gap-1.5 text-[12px] font-medium text-[var(--accent-primary)] cursor-pointer"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Guide</span>
             </button>
 
             {/* Keyboard Help (?) */}

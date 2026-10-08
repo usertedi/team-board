@@ -14,15 +14,23 @@ import {
 import { useTeamBoards } from '../contexts/TeamBoardsContext';
 import { BoardRecord } from '../types/teamBoards';
 import { UserAvatar } from './BrandAndPrimitives';
+import { GettingStartedGuideBanner } from './PlatformGuide';
+import { ShellView } from './AppShell';
 
 interface BoardsOverviewScreenProps {
   onOpenBoard: (boardId: string) => void;
   onOpenNewBoardModal: () => void;
+  onOpenNewIssueModal: () => void;
+  onNavigateView: (view: ShellView) => void;
+  onOpenFullGuide: () => void;
 }
 
 export const BoardsOverviewScreen: React.FC<BoardsOverviewScreenProps> = ({
   onOpenBoard,
   onOpenNewBoardModal,
+  onOpenNewIssueModal,
+  onNavigateView,
+  onOpenFullGuide,
 }) => {
   const {
     boards,
@@ -363,6 +371,14 @@ export const BoardsOverviewScreen: React.FC<BoardsOverviewScreenProps> = ({
           )}
         </div>
       </div>
+
+      {/* Interactive Quick Start Guide Banner for New Users */}
+      <GettingStartedGuideBanner
+        onOpenNewBoardModal={onOpenNewBoardModal}
+        onOpenNewIssueModal={onOpenNewIssueModal}
+        onNavigateView={onNavigateView}
+        onOpenFullGuide={onOpenFullGuide}
+      />
 
       {/* Main Content Layout: Boards + Recent Workspace Events Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
