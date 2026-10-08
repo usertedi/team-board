@@ -1,0 +1,6 @@
+{
+  "name": "Precision Slate — Issue & Cycle Workspace",
+  "description": "High-performance issue tracking, cycle velocity, and multi-column workflow board built for product engineering teams.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@layer base {
+  /* Light Theme Tokens */
+  :root {
+    --bg-canvas: #F8FAFC;
+    --bg-surface-1: #FFFFFF;
+    --bg-surface-2: #F1F5F9;
+    --bg-surface-3: #E2E8F0;
+    --bg-selected: #EEF2FF;
+    --border-subtle: rgba(15, 23, 42, 0.08);
+    --border-strong: rgba(15, 23, 42, 0.16);
+    --accent-primary: #4F46E5;
+    --accent-hover: #4338CA;
+    --accent-tint: rgba(79, 70, 229, 0.10);
+    --text-primary: #0F172A;
+    --text-secondary: #334155;
+    --text-muted: #64748B;
+    --status-done: #16A34A;
+    --status-warning: #D97706;
+    --status-danger: #DC2626;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+  }
+
+  /* Dark Theme Tokens (Default) */
+  .dark {
+    --bg-canvas: #08090A;
+    --bg-surface-1: #0C0D0E;
+    --bg-surface-2: #121417;
+    --bg-surface-3: #181B1F;
+    --bg-selected: #141726;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.15);
+    --accent-primary: #5E6AD2;
+    --accent-hover: #4D58BF;
+    --accent-tint: rgba(94, 106, 210, 0.15);
+    --text-primary: #F1F3F5;
+    --text-secondary: #C6C5D5;
+    --text-muted: #8A8F98;
+    --status-done: #27C383;
+    --status-warning: #E5A83B;
+    --status-danger: #EB5757;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 20px;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  .font-mono-id {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}
+
+/* Reduced motion accessibility compliance */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Accessible visible focus rings */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+}
+
+/* Custom subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}

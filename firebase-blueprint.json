@@ -1,0 +1,310 @@
+{
+  "entities": {
+    "Profile": {
+      "title": "Profile",
+      "description": "Public user profile information (no PII).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "avatarUrl": { "type": "string", "maxLength": 500 },
+        "initials": { "type": "string", "minLength": 1, "maxLength": 4 },
+        "color": { "type": "string", "minLength": 4, "maxLength": 20 },
+        "title": { "type": "string", "maxLength": 80 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "initials", "color", "createdAt", "updatedAt"]
+    },
+    "UserPrivate": {
+      "title": "UserPrivate",
+      "description": "Strictly isolated private user PII (email).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "maxLength": 200 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "Workspace": {
+      "title": "Workspace",
+      "description": "Project management workspace container.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "slug": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "slug", "ownerId", "createdAt"]
+    },
+    "WorkspaceMember": {
+      "title": "WorkspaceMember",
+      "description": "Role-based membership record for a workspace.",
+      "type": "object",
+      "properties": {
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "role": { "type": "string", "enum": ["owner", "admin", "member", "viewer"] },
+        "displayName": { "type": "string", "maxLength": 80 },
+        "initials": { "type": "string", "maxLength": 4 },
+        "color": { "type": "string", "maxLength": 20 },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["workspaceId", "userId", "role", "displayName", "initials", "color", "joinedAt"]
+    },
+    "Team": {
+      "title": "Team",
+      "description": "Team inside a workspace with a short key for issue numbering.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "key": { "type": "string", "minLength": 2, "maxLength": 10 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "color": { "type": "string", "maxLength": 20 },
+        "issueCounter": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "workspaceId", "key", "name", "color", "issueCounter", "createdAt"]
+    },
+    "Board": {
+      "title": "Board",
+      "description": "Board belonging to a team.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "teamId": { "type": "string", "maxLength": 128 },
+        "teamKey": { "type": "string", "maxLength": 10 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 500 },
+        "template": { "type": "string", "enum": ["kanban", "sprint", "bug_tracker"] },
+        "archived": { "type": "boolean" },
+        "createdBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "workspaceId", "teamId", "teamKey", "title", "description", "template", "archived", "createdBy", "createdAt", "updatedAt"]
+    },
+    "BoardList": {
+      "title": "BoardList",
+      "description": "Column list inside a board.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "boardId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "color": { "type": "string", "maxLength": 20 },
+        "position": { "type": "number" },
+        "isDoneList": { "type": "boolean" }
+      },
+      "required": ["id", "workspaceId", "boardId", "title", "color", "position", "isDoneList"]
+    },
+    "Issue": {
+      "title": "Issue",
+      "description": "Issue card with per-team auto-incrementing number and fractional position.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "teamId": { "type": "string", "maxLength": 128 },
+        "boardId": { "type": "string", "maxLength": 128 },
+        "listId": { "type": "string", "maxLength": 128 },
+        "number": { "type": "number" },
+        "identifier": { "type": "string", "maxLength": 24 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 5000 },
+        "priority": { "type": "string", "enum": ["none", "low", "medium", "high", "urgent"] },
+        "assigneeId": { "type": "string", "maxLength": 128 },
+        "estimate": { "type": "number" },
+        "dueDate": { "type": "string", "maxLength": 40 },
+        "position": { "type": "number" },
+        "labelIds": { "type": "array" },
+        "createdBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "workspaceId", "teamId", "boardId", "listId", "number", "identifier", "title", "description", "priority", "estimate", "position", "labelIds", "createdBy", "createdAt", "updatedAt"]
+    },
+    "Label": {
+      "title": "Label",
+      "description": "Colored issue label within a workspace.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "color": { "type": "string", "minLength": 4, "maxLength": 20 }
+      },
+      "required": ["id", "workspaceId", "name", "color"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "Comment on an issue card.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "issueId": { "type": "string", "maxLength": 128 },
+        "authorId": { "type": "string", "maxLength": 128 },
+        "authorName": { "type": "string", "maxLength": 80 },
+        "authorInitials": { "type": "string", "maxLength": 4 },
+        "authorColor": { "type": "string", "maxLength": 20 },
+        "body": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "workspaceId", "issueId", "authorId", "authorName", "authorInitials", "authorColor", "body", "createdAt", "updatedAt"]
+    },
+    "Activity": {
+      "title": "Activity",
+      "description": "Audit log entry for issue and board mutations.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "boardId": { "type": "string", "maxLength": 128 },
+        "issueId": { "type": "string", "maxLength": 128 },
+        "issueIdentifier": { "type": "string", "maxLength": 24 },
+        "actorId": { "type": "string", "maxLength": 128 },
+        "actorName": { "type": "string", "maxLength": 80 },
+        "actorInitials": { "type": "string", "maxLength": 4 },
+        "actorColor": { "type": "string", "maxLength": 20 },
+        "action": { "type": "string", "maxLength": 120 },
+        "detail": { "type": "string", "maxLength": 300 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "workspaceId", "actorId", "actorName", "actorInitials", "actorColor", "action", "detail", "createdAt"]
+    },
+    "Invite": {
+      "title": "Invite",
+      "description": "Tokenized workspace invitation link.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "workspaceName": { "type": "string", "maxLength": 80 },
+        "token": { "type": "string", "minLength": 6, "maxLength": 64 },
+        "role": { "type": "string", "enum": ["admin", "member", "viewer"] },
+        "createdBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "acceptedBy": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "workspaceId", "workspaceName", "token", "role", "createdBy", "createdAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User notification for assignments and comments.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "recipientId": { "type": "string", "maxLength": 128 },
+        "actorName": { "type": "string", "maxLength": 80 },
+        "type": { "type": "string", "enum": ["assigned", "commented", "mentioned"] },
+        "issueId": { "type": "string", "maxLength": 128 },
+        "issueIdentifier": { "type": "string", "maxLength": 24 },
+        "boardId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "workspaceId", "recipientId", "actorName", "type", "issueId", "issueIdentifier", "boardId", "title", "read", "createdAt"]
+    },
+    "Pin": {
+      "title": "Pin",
+      "description": "User-pinned board record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "boardId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "workspaceId", "userId", "boardId", "createdAt"]
+    },
+    "Presence": {
+      "title": "Presence",
+      "description": "Real-time presence heartbeat on a board.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "workspaceId": { "type": "string", "maxLength": 128 },
+        "boardId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 80 },
+        "initials": { "type": "string", "maxLength": 4 },
+        "color": { "type": "string", "maxLength": 20 },
+        "lastSeen": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "workspaceId", "boardId", "userId", "displayName", "initials", "color", "lastSeen"]
+    }
+  },
+  "firestore": {
+    "/profiles/{userId}": {
+      "schema": { "$ref": "#/entities/Profile" },
+      "description": "Public profile for each authenticated user."
+    },
+    "/users_private/{userId}": {
+      "schema": { "$ref": "#/entities/UserPrivate" },
+      "description": "Isolated private email storage accessible only to the owner."
+    },
+    "/workspaces/{workspaceId}": {
+      "schema": { "$ref": "#/entities/Workspace" },
+      "description": "Workspaces metadata."
+    },
+    "/workspaces/{workspaceId}/members/{userId}": {
+      "schema": { "$ref": "#/entities/WorkspaceMember" },
+      "description": "Workspace members and RBAC roles."
+    },
+    "/workspaces/{workspaceId}/teams/{teamId}": {
+      "schema": { "$ref": "#/entities/Team" },
+      "description": "Teams inside a workspace."
+    },
+    "/workspaces/{workspaceId}/boards/{boardId}": {
+      "schema": { "$ref": "#/entities/Board" },
+      "description": "Boards inside a workspace."
+    },
+    "/workspaces/{workspaceId}/lists/{listId}": {
+      "schema": { "$ref": "#/entities/BoardList" },
+      "description": "Lists belonging to boards in a workspace."
+    },
+    "/workspaces/{workspaceId}/issues/{issueId}": {
+      "schema": { "$ref": "#/entities/Issue" },
+      "description": "Issues inside a workspace."
+    },
+    "/workspaces/{workspaceId}/labels/{labelId}": {
+      "schema": { "$ref": "#/entities/Label" },
+      "description": "Colored labels inside a workspace."
+    },
+    "/workspaces/{workspaceId}/comments/{commentId}": {
+      "schema": { "$ref": "#/entities/Comment" },
+      "description": "Issue comments inside a workspace."
+    },
+    "/workspaces/{workspaceId}/activity/{activityId}": {
+      "schema": { "$ref": "#/entities/Activity" },
+      "description": "Audit activity events inside a workspace."
+    },
+    "/workspaces/{workspaceId}/invites/{inviteId}": {
+      "schema": { "$ref": "#/entities/Invite" },
+      "description": "Workspace invite tokens."
+    },
+    "/workspaces/{workspaceId}/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "User notifications inside a workspace."
+    },
+    "/workspaces/{workspaceId}/pins/{pinId}": {
+      "schema": { "$ref": "#/entities/Pin" },
+      "description": "Pinned boards for workspace members."
+    },
+    "/workspaces/{workspaceId}/presence/{presenceId}": {
+      "schema": { "$ref": "#/entities/Presence" },
+      "description": "Active board viewers presence."
+    }
+  }
+}
