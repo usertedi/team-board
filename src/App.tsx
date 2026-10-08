@@ -66,9 +66,13 @@ function TeamBoardsWorkspaceContent({
   const filterInputRef = useRef<HTMLInputElement | null>(null);
   const gChordActiveRef = useRef<boolean>(false);
   const gChordTimerRef = useRef<number | null>(null);
+  const initialUrlParsedRef = useRef<boolean>(false);
 
-  // Support shareable URLs like /boards/:id/issues/:number or ?invite=token
+  // Support shareable URLs like /boards/:id/issues/:number or ?invite=token on initial load only
   useEffect(() => {
+    if (initialUrlParsedRef.current) return;
+    initialUrlParsedRef.current = true;
+
     const path = window.location.pathname;
     const match = path.match(/\/boards\/([^/]+)\/issues\/([A-Za-z0-9-]+)/);
     if (match) {

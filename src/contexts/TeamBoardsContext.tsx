@@ -382,7 +382,7 @@ export const TeamBoardsProvider: React.FC<{ children: React.ReactNode }> = ({
     currentUserColor,
   ]);
 
-  // Sync URL `/boards/:boardId/issues/:identifier` on initial load and popstate
+  // Sync URL `/boards/:boardId/issues/:identifier` on initial load and browser back/forward popstate only
   useEffect(() => {
     const parseUrl = () => {
       const path = window.location.pathname;
@@ -402,10 +402,11 @@ export const TeamBoardsProvider: React.FC<{ children: React.ReactNode }> = ({
           if (foundIssue) {
             setInspectedIssueId(foundIssue.id);
           }
+        } else {
+          setInspectedIssueId(null);
         }
       }
     };
-    parseUrl();
     window.addEventListener('popstate', parseUrl);
     return () => window.removeEventListener('popstate', parseUrl);
   }, [bundle.boards, bundle.issues]);
@@ -419,7 +420,9 @@ export const TeamBoardsProvider: React.FC<{ children: React.ReactNode }> = ({
     const issue = bundle.issues.find((i) => i.id === inspectedIssueId);
     const nextPath = issue
       ? `/boards/${issue.boardId}/issues/${issue.identifier}`
-      : `/boards/${activeBoardId}`;
+      : activeBoardId
+      ? `/boards/${activeBoardId}`
+      : '/';
     if (window.location.pathname !== nextPath) {
       window.history.replaceState({}, '', `${nextPath}${search}`);
     }
@@ -1223,15 +1226,18 @@ export const TeamBoardsProvider: React.FC<{ children: React.ReactNode }> = ({
     }));
   };
 
-  const openIssueByIdentifier = (identifier: string) => {
-    const found = bundle.issues.find(
-      (i) => i.identifier.toLowerCase() === identifier.toLowerCase()
-    );
-    if (found) {
-      setActiveBoardId(found.boardId);
-      setInspectedIssueId(found.id);
-    }
-  };
+  const openIssueByIdentifier = useCallback(
+    (identifier: string) => {
+      const found = bundle.issues.find(
+        (i) => i.identifier.toLowerCase() === identifier.toLowerCase()
+      );
+      if (found) {
+        setActiveBoardId(found.boardId);
+        setInspectedIssueId(found.id);
+      }
+    },
+    [bundle.issues]
+  );
 
   // Filtered by activeWorkspace
   const wsTeams = useMemo(
