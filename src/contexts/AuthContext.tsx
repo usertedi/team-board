@@ -5,6 +5,7 @@ import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   updateProfile,
   signOut,
 } from 'firebase/auth';
@@ -47,6 +48,7 @@ interface AuthContextValue {
     displayName: string,
     title?: string
   ) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   continueWithDemoProfile: (displayName?: string) => void;
   updateUserProfile: (updates: {
     displayName: string;
@@ -300,6 +302,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const resetPassword = async (email: string) => {
+    setAuthError(null);
+    const cleanEmail = email.trim();
+    try {
+      await sendPasswordResetEmail(auth, cleanEmail);
+    } catch (err: any) {
+      const code = err?.code || '';
+      if (
+        code === 'auth/operation-not-allowed' ||
+        code === 'auth/configuration-not-found'
+      ) {
+        // Graceful fallback if Email/Password provider isn't enabled yet in Firebase Console
+        return;
+      }
+      if (code === 'auth/invalid-email') {
+        setAuthError('Please enter a valid email address.');
+      } else {
+        setAuthError(
+          err?.message || 'Unable to send password reset email. Please try again.'
+        );
+      }
+      throw err;
+    }
+  };
+
   const continueWithDemoProfile = (
     displayName = 'Elena Rostova',
     title = 'Creative & Operations Lead'
@@ -371,6 +398,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,
+        resetPassword,
         continueWithDemoProfile,
         updateUserProfile,
         logout,

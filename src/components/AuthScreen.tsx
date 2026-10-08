@@ -5,6 +5,7 @@ import {
   User as UserIcon,
   ArrowRight,
   AlertCircle,
+  CheckCircle2,
   Sun,
   Moon,
   Briefcase,
@@ -25,17 +26,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
+    resetPassword,
     continueWithDemoProfile,
     authError,
     clearAuthError,
   } = useAuth();
 
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<'login' | 'signup' | 'reset'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [roleTitle, setRoleTitle] = useState('Project Lead');
   const [submitting, setSubmitting] = useState(false);
+  const [resetSentMessage, setResetSentMessage] = useState<string | null>(null);
   const [localValidationError, setLocalValidationError] = useState<
     string | null
   >(null);
@@ -43,12 +46,29 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalValidationError(null);
+    setResetSentMessage(null);
     clearAuthError();
 
     if (!email.trim() || !email.includes('@')) {
       setLocalValidationError('Please enter a valid email address.');
       return;
     }
+
+    if (mode === 'reset') {
+      setSubmitting(true);
+      try {
+        await resetPassword(email);
+        setResetSentMessage(
+          `If an account exists for ${email.trim()}, a password reset link has been sent to your inbox.`
+        );
+      } catch {
+        // Handled by AuthContext
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     if (password.length < 6) {
       setLocalValidationError('Password must be at least 6 characters.');
       return;
@@ -123,14 +143,29 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             <h1 className="text-[20px] leading-[28px] font-semibold tracking-tight text-[var(--text-primary)]">
               {mode === 'login'
                 ? 'Sign in to Team Boards'
-                : 'Create your Team Boards account'}
+                : mode === 'signup'
+                ? 'Create your Team Boards account'
+                : 'Reset your password'}
             </h1>
             <p className="text-[14px] leading-[20px] text-[var(--text-muted)]">
               {mode === 'login'
                 ? 'Enter your credentials or continue with your workspace provider.'
-                : 'Set up your profile to collaborate on team boards and issues.'}
+                : mode === 'signup'
+                ? 'Set up your profile to collaborate on team boards and issues.'
+                : 'Enter the email address associated with your account and we will send you a password reset link.'}
             </p>
           </div>
+
+          {/* Success Banner (Password Reset Sent) */}
+          {resetSentMessage && (
+            <div
+              role="status"
+              className="p-3 rounded-[var(--radius-sm)] bg-[var(--status-done)]/10 border border-[var(--status-done)]/30 text-[var(--status-done)] text-[13px] flex items-start gap-2.5"
+            >
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{resetSentMessage}</span>
+            </div>
+          )}
 
           {/* Error Banner */}
           {errorMessage && (
@@ -284,26 +319,44 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label
-                htmlFor="auth-password"
-                className="block text-[12px] font-medium text-[var(--text-secondary)]"
-              >
-                Password
-              </label>
-              <div className="relative flex items-center">
-                <Lock className="w-4 h-4 text-[var(--text-muted)] absolute left-3 pointer-events-none" />
-                <input
-                  id="auth-password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full h-10 pl-9 pr-3 bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] focus:border-[var(--accent-primary)] rounded-[var(--radius-sm)] text-[14px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none"
-                />
+            {mode !== 'reset' && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="auth-password"
+                    className="block text-[12px] font-medium text-[var(--text-secondary)]"
+                  >
+                    Password
+                  </label>
+                  {mode === 'login' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('reset');
+                        setLocalValidationError(null);
+                        setResetSentMessage(null);
+                        clearAuthError();
+                      }}
+                      className="text-[12px] font-medium text-[var(--accent-primary)] hover:underline cursor-pointer"
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
+                <div className="relative flex items-center">
+                  <Lock className="w-4 h-4 text-[var(--text-muted)] absolute left-3 pointer-events-none" />
+                  <input
+                    id="auth-password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full h-10 pl-9 pr-3 bg-[var(--bg-surface-2)] border border-[var(--border-subtle)] focus:border-[var(--accent-primary)] rounded-[var(--radius-sm)] text-[14px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <button
               type="submit"
@@ -311,7 +364,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               className="w-full h-10 px-4 rounded-[var(--radius-sm)] bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-white text-[14px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
             >
               <span>
-                {mode === 'login' ? 'Sign In' : 'Create Account'}
+                {mode === 'login'
+                  ? 'Sign In'
+                  : mode === 'signup'
+                  ? 'Create Account'
+                  : 'Send Password Reset Link'}
               </span>
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -323,18 +380,21 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               <span>
                 {mode === 'login'
                   ? "Don't have an account?"
-                  : 'Already have an account?'}
+                  : mode === 'signup'
+                  ? 'Already have an account?'
+                  : 'Remembered your password?'}
               </span>
               <button
                 type="button"
                 onClick={() => {
                   setMode(mode === 'login' ? 'signup' : 'login');
                   setLocalValidationError(null);
+                  setResetSentMessage(null);
                   clearAuthError();
                 }}
                 className="font-medium text-[var(--accent-primary)] hover:underline cursor-pointer"
               >
-                {mode === 'login' ? 'Create account' : 'Sign in instead'}
+                {mode === 'login' ? 'Create account' : 'Back to Sign in'}
               </button>
             </div>
 
