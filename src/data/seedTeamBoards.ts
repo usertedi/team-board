@@ -786,3 +786,116 @@ export function buildSeedBundle(
     presence,
   };
 }
+
+/**
+ * Clean Account Bundle for Newly Registered Users
+ * New accounts start with their own personal workspace, a single default team,
+ * standard labels, and zero pre-existing demo boards/issues unless they create them
+ * or accept an invite link into another workspace.
+ */
+export function buildCleanAccountBundle(
+  currentUserId: string,
+  currentUserName: string,
+  currentUserInitials: string,
+  currentUserColor: string,
+  currentUserTitle = 'Workspace Lead'
+): SeedBundle {
+  const wsId = `ws-${currentUserId.slice(0, 10).toLowerCase()}`;
+  const firstName = currentUserName.trim().split(/\s+/)[0] || 'My';
+  const wsName = `${firstName}'s Workspace`;
+  const slug = wsName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const teamId = `tm-${currentUserId.slice(0, 8).toLowerCase()}`;
+  const teamKey = firstName
+    .toUpperCase()
+    .replace(/[^A-Z]/g, '')
+    .slice(0, 3)
+    .padEnd(3, 'X');
+
+  const workspaces: WorkspaceRecord[] = [
+    {
+      id: wsId,
+      name: wsName,
+      slug,
+      ownerId: currentUserId,
+      createdAt: new Date().toISOString(),
+    },
+  ];
+
+  const members: WorkspaceMemberRecord[] = [
+    {
+      workspaceId: wsId,
+      userId: currentUserId,
+      role: 'owner',
+      displayName: currentUserName,
+      initials: currentUserInitials,
+      color: currentUserColor,
+      title: currentUserTitle,
+      joinedAt: new Date().toISOString(),
+    },
+  ];
+
+  const teams: TeamRecord[] = [
+    {
+      id: teamId,
+      workspaceId: wsId,
+      key: teamKey,
+      name: 'General Team',
+      color: '#5E6AD2',
+      issueCounter: 0,
+      createdAt: new Date().toISOString(),
+    },
+  ];
+
+  const labels: LabelRecord[] = [
+    { id: `lbl-${wsId}-1`, workspaceId: wsId, name: 'Content & Copy', color: '#E5A83B' },
+    { id: `lbl-${wsId}-2`, workspaceId: wsId, name: 'Creative & Design', color: '#5E6AD2' },
+    { id: `lbl-${wsId}-3`, workspaceId: wsId, name: 'Events & Ops', color: '#27C383' },
+    { id: `lbl-${wsId}-4`, workspaceId: wsId, name: 'Research', color: '#0EA5E9' },
+    { id: `lbl-${wsId}-5`, workspaceId: wsId, name: 'Product & Tech', color: '#8B95E5' },
+    { id: `lbl-${wsId}-6`, workspaceId: wsId, name: 'Client Request', color: '#F43F5E' },
+  ];
+
+  const activity: ActivityRecord[] = [
+    {
+      id: `act-init-${wsId}`,
+      workspaceId: wsId,
+      actorId: currentUserId,
+      actorName: currentUserName,
+      actorInitials: currentUserInitials,
+      actorColor: currentUserColor,
+      action: 'created workspace',
+      detail: `${wsName} is ready — create your first board or accept an invite link`,
+      createdAt: 'Just now',
+    },
+  ];
+
+  const presence: PresenceRecord[] = [
+    {
+      id: `pres-${currentUserId}`,
+      workspaceId: wsId,
+      boardId: '',
+      userId: currentUserId,
+      displayName: currentUserName,
+      initials: currentUserInitials,
+      color: currentUserColor,
+      lastSeen: 'Active now',
+    },
+  ];
+
+  return {
+    workspaces,
+    members,
+    teams,
+    boards: [],
+    lists: [],
+    labels,
+    issues: [],
+    comments: [],
+    activity,
+    invites: [],
+    notifications: [],
+    pins: [],
+    presence,
+  };
+}
+

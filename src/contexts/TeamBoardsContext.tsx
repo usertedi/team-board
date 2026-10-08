@@ -37,7 +37,11 @@ import {
   IssuePriority,
   TEMPLATE_LISTS,
 } from '../types/teamBoards';
-import { buildSeedBundle, SeedBundle } from '../data/seedTeamBoards';
+import {
+  buildSeedBundle,
+  buildCleanAccountBundle,
+  SeedBundle,
+} from '../data/seedTeamBoards';
 
 interface TeamBoardsContextValue {
   // Data
@@ -137,7 +141,7 @@ const TeamBoardsContext = createContext<TeamBoardsContextValue | undefined>(
   undefined
 );
 
-const STORAGE_KEY = 'team_boards_state_v3';
+const STORAGE_KEY = 'team_boards_state_v4';
 const CHANNEL_NAME = 'team_boards_realtime_sync';
 
 export const TeamBoardsProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -150,46 +154,93 @@ export const TeamBoardsProvider: React.FC<{ children: React.ReactNode }> = ({
   const currentUserName = profile?.displayName || 'Elena Rostova';
   const currentUserInitials = profile?.initials || 'ER';
   const currentUserColor = profile?.color || '#5E6AD2';
+  const currentUserTitle = profile?.title || 'Workspace Lead';
+  const isDemoAccount = currentUserId === 'usr-demo-elena';
 
   const [bundle, setBundle] = useState<SeedBundle>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && Array.isArray(parsed.workspaces) && parsed.workspaces.length > 0) {
+        const parsed = JSON.parse(saved) as SeedBundle;
+        if (
+          parsed &&
+          Array.isArray(parsed.workspaces) &&
+          parsed.workspaces.length > 0
+        ) {
           return parsed;
         }
       }
     } catch {
       // ignore storage errors
     }
-    return buildSeedBundle(
+    // Always include the demo bundle in the store so demo invite tokens (tb_inv_9f8a7d6c5b4e) exist if a user pastes one,
+    // but only add the current user as a member of the demo workspace if they logged in as the Demo Account!
+    const demoBundle = buildSeedBundle(
+      'usr-demo-elena',
+      'Elena Rostova',
+      'ER',
+      '#5E6AD2'
+    );
+    if (isDemoAccount) {
+      return demoBundle;
+    }
+    const cleanBundle = buildCleanAccountBundle(
       currentUserId,
       currentUserName,
       currentUserInitials,
-      currentUserColor
+      currentUserColor,
+      currentUserTitle
     );
+    return {
+      workspaces: [...cleanBundle.workspaces, ...demoBundle.workspaces],
+      members: [...cleanBundle.members, ...demoBundle.members],
+      teams: [...cleanBundle.teams, ...demoBundle.teams],
+      boards: [...cleanBundle.boards, ...demoBundle.boards],
+      lists: [...cleanBundle.lists, ...demoBundle.lists],
+      labels: [...cleanBundle.labels, ...demoBundle.labels],
+      issues: [...cleanBundle.issues, ...demoBundle.issues],
+      comments: [...cleanBundle.comments, ...demoBundle.comments],
+      activity: [...cleanBundle.activity, ...demoBundle.activity],
+      invites: [...cleanBundle.invites, ...demoBundle.invites],
+      notifications: [...cleanBundle.notifications, ...demoBundle.notifications],
+      pins: [...cleanBundle.pins, ...demoBundle.pins],
+      presence: [...cleanBundle.presence, ...demoBundle.presence],
+    };
   });
 
+  // Workspaces where the current user is actually a member or owner
+  const userWorkspaces = useMemo(() => {
+    const myWsIds = new Set(
+      bundle.members
+        .filter((m) => m.userId === currentUserId)
+        .map((m) => m.workspaceId)
+    );
+    return bundle.workspaces.filter(
+      (w) => w.ownerId === currentUserId || myWsIds.has(w.id)
+    );
+  }, [bundle.workspaces, bundle.members, currentUserId]);
+
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string>(
-    () => bundle.workspaces[0]?.id || 'ws-horizon'
+    () => userWorkspaces[0]?.id || bundle.workspaces[0]?.id || 'ws-horizon'
   );
   const [activeBoardId, setActiveBoardId] = useState<string>(
-    () => bundle.boards[0]?.id || 'brd-mkt-launch'
+    () =>
+      bundle.boards.find((b) => b.workspaceId === activeWorkspaceId)?.id || ''
   );
   const [inspectedIssueId, setInspectedIssueId] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState<boolean>(
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
 
-  // Sync current user profile into workspace members if needed
+  // Ensure every authenticated user has their own personal workspace if they are not yet involved in any workspace
   useEffect(() => {
     if (!profile) return;
     setBundle((prev) => {
-      const exists = prev.members.some(
-        (m) => m.workspaceId === activeWorkspaceId && m.userId === profile.uid
+      const myMemberships = prev.members.filter(
+        (m) => m.userId === profile.uid
       );
-      if (exists) {
+      if (myMemberships.length > 0) {
+        // Update profile details across workspaces the user belongs to
         return {
           ...prev,
           members: prev.members.map((m) =>
@@ -205,24 +256,48 @@ export const TeamBoardsProvider: React.FC<{ children: React.ReactNode }> = ({
           ),
         };
       }
-      return {
+
+      // Brand-new account that is not in any workspace yet -> provision a clean personal workspace
+      const clean = buildCleanAccountBundle(
+        profile.uid,
+        profile.displayName,
+        profile.initials,
+        profile.color,
+        profile.title || 'Workspace Lead'
+      );
+      const next = {
         ...prev,
-        members: [
-          ...prev.members,
-          {
-            workspaceId: activeWorkspaceId,
-            userId: profile.uid,
-            role: 'owner',
-            displayName: profile.displayName,
-            initials: profile.initials,
-            color: profile.color,
-            title: profile.title || 'Product Engineering',
-            joinedAt: new Date().toISOString(),
-          },
-        ],
+        workspaces: [clean.workspaces[0], ...prev.workspaces],
+        members: [...clean.members, ...prev.members],
+        teams: [...clean.teams, ...prev.teams],
+        labels: [...clean.labels, ...prev.labels],
+        activity: [...clean.activity, ...prev.activity],
+        presence: [...clean.presence, ...prev.presence],
       };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
     });
-  }, [profile, activeWorkspaceId]);
+  }, [profile]);
+
+  // Keep activeWorkspaceId pointed to a workspace the current user actually belongs to
+  useEffect(() => {
+    if (
+      userWorkspaces.length > 0 &&
+      !userWorkspaces.some((w) => w.id === activeWorkspaceId)
+    ) {
+      const nextWs = userWorkspaces[0];
+      setActiveWorkspaceId(nextWs.id);
+      const firstBoard = bundle.boards.find(
+        (b) => b.workspaceId === nextWs.id && !b.archived
+      );
+      setActiveBoardId(firstBoard?.id || '');
+      setInspectedIssueId(null);
+    }
+  }, [userWorkspaces, activeWorkspaceId, bundle.boards]);
 
   // Persist to localStorage & broadcast across tabs via BroadcastChannel for instant Realtime sync
   const persistAndBroadcast = useCallback(
@@ -352,9 +427,10 @@ export const TeamBoardsProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const activeWorkspace = useMemo(
     () =>
-      bundle.workspaces.find((w) => w.id === activeWorkspaceId) ||
+      userWorkspaces.find((w) => w.id === activeWorkspaceId) ||
+      userWorkspaces[0] ||
       bundle.workspaces[0],
-    [bundle.workspaces, activeWorkspaceId]
+    [userWorkspaces, bundle.workspaces, activeWorkspaceId]
   );
 
   const workspaceMembers = useMemo(
@@ -1192,8 +1268,12 @@ export const TeamBoardsProvider: React.FC<{ children: React.ReactNode }> = ({
   );
   const wsNotifications = useMemo(
     () =>
-      bundle.notifications.filter((n) => n.workspaceId === activeWorkspace.id),
-    [bundle.notifications, activeWorkspace.id]
+      bundle.notifications.filter(
+        (n) =>
+          n.workspaceId === activeWorkspace.id &&
+          n.recipientId === currentUserId
+      ),
+    [bundle.notifications, activeWorkspace.id, currentUserId]
   );
   const wsPins = useMemo(
     () =>
@@ -1211,7 +1291,7 @@ export const TeamBoardsProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <TeamBoardsContext.Provider
       value={{
-        workspaces: bundle.workspaces,
+        workspaces: userWorkspaces,
         activeWorkspace,
         members: workspaceMembers,
         currentUserRole,

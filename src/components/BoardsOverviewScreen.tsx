@@ -403,12 +403,14 @@ export const BoardsOverviewScreen: React.FC<BoardsOverviewScreenProps> = ({
                 <div className="text-[15px] font-semibold text-[var(--text-primary)]">
                   {showArchived
                     ? 'No archived boards'
-                    : 'No boards match your filter'}
+                    : filterText.trim()
+                    ? 'No boards match your filter'
+                    : 'Your workspace has no boards yet'}
                 </div>
                 <p className="text-[13px] text-[var(--text-muted)] max-w-md mx-auto">
                   {showArchived
                     ? 'Archived boards can be restored at any time without losing issues.'
-                    : 'Create a new board from a Kanban, Sprint, or Bug Tracker template.'}
+                    : 'Start fresh by creating your first board from a Kanban, Milestone/Campaign, or Requests template—or accept an invite token under Members & Invites.'}
                 </p>
                 {canEdit && !showArchived && (
                   <button
@@ -417,7 +419,7 @@ export const BoardsOverviewScreen: React.FC<BoardsOverviewScreenProps> = ({
                     className="h-9 px-4 rounded-[var(--radius-sm)] bg-[var(--accent-primary)] text-white text-[13px] font-medium inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>Create New Board</span>
+                    <span>Create Your First Board</span>
                   </button>
                 )}
               </div>

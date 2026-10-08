@@ -230,9 +230,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         code === 'auth/operation-not-allowed' ||
         code === 'auth/configuration-not-found'
       ) {
-        // Automatically authenticate into an interactive session if Email/Password provider isn't toggled in Firebase Console yet
-        const nameFromEmail = email.split('@')[0] || 'Alex Rivera';
-        continueWithDemoProfile(nameFromEmail);
+        // Automatically authenticate into an interactive session with a unique UID for that email
+        const cleanEmail = email.trim().toLowerCase();
+        const nameFromEmail = cleanEmail.split('@')[0] || 'Alex Rivera';
+        const uniqueUid = `usr-${cleanEmail.replace(/[^a-z0-9]/g, '').slice(0, 16) || 'member'}`;
+        setIsLocalSession(true);
+        setProfile({
+          uid: uniqueUid,
+          displayName: nameFromEmail,
+          initials: computeInitials(nameFromEmail),
+          color: pickColorForUid(uniqueUid),
+          title: 'Workspace Lead',
+        });
+        setLoading(false);
         return;
       }
       if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
@@ -272,7 +282,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         code === 'auth/operation-not-allowed' ||
         code === 'auth/configuration-not-found'
       ) {
-        continueWithDemoProfile(cleanName, title);
+        const cleanEmail = email.trim().toLowerCase();
+        const uniqueUid = `usr-${cleanEmail.replace(/[^a-z0-9]/g, '').slice(0, 16) || Date.now().toString(36)}`;
+        setIsLocalSession(true);
+        setProfile({
+          uid: uniqueUid,
+          displayName: cleanName,
+          initials: computeInitials(cleanName),
+          color: pickColorForUid(uniqueUid),
+          title,
+        });
+        setLoading(false);
         return;
       }
       setAuthError(err?.message || 'Could not create account.');

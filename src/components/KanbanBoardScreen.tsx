@@ -682,6 +682,21 @@ export const KanbanBoardScreen: React.FC<KanbanBoardScreenProps> = ({
     setAddingList(false);
   };
 
+  if (!activeBoard) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-8 bg-[var(--bg-canvas)]">
+        <div className="max-w-md w-full bg-[var(--bg-surface-1)] border border-dashed border-[var(--border-strong)] rounded-[var(--radius-lg)] p-8 text-center space-y-3">
+          <h2 className="text-[16px] font-semibold text-[var(--text-primary)]">
+            No boards in this workspace yet
+          </h2>
+          <p className="text-[14px] text-[var(--text-muted)]">
+            Your workspace starts clean. Create your first board from the Boards Overview or Command Palette (⌘K) to start organizing work.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden bg-[var(--bg-canvas)]">
       {/* Filter, Sort & Group By Toolbar */}
