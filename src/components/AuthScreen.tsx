@@ -88,9 +88,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const errorMessage = localValidationError || authError;
 
   return (
-    <div className="min-h-screen w-screen bg-[var(--bg-canvas)] text-[var(--text-primary)] flex flex-col justify-between p-6 overflow-y-auto">
+    <div className="h-dvh w-full bg-[var(--bg-canvas)] text-[var(--text-primary)] flex flex-col justify-between px-4 py-5 sm:p-6 overflow-y-auto">
       {/* Top Bar: Clean Wordmark + Theme Toggle */}
-      <header className="w-full max-w-6xl mx-auto flex items-center justify-between">
+      <header className="w-full max-w-6xl mx-auto flex items-center justify-between shrink-0">
         <TeamBoardsWordmark size="md" />
 
         <button
@@ -116,8 +116,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       </header>
 
       {/* Center Auth Card */}
-      <main className="w-full max-w-[420px] mx-auto my-8">
-        <div className="bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] rounded-[var(--radius-lg)] p-7 shadow-sm space-y-6">
+      <main className="w-full max-w-[420px] mx-auto my-4 sm:my-6 shrink-0">
+        <div className="bg-[var(--bg-surface-1)] border border-[var(--border-subtle)] rounded-[var(--radius-lg)] p-5 sm:p-6 shadow-sm space-y-5">
           {/* Header */}
           <div className="space-y-1.5">
             <h1 className="text-[20px] leading-[28px] font-semibold tracking-tight text-[var(--text-primary)]">
@@ -351,7 +351,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       </main>
 
       {/* Quiet Footer (No fake telemetry or invented badges) */}
-      <footer className="w-full max-w-6xl mx-auto flex items-center justify-between text-[12px] text-[var(--text-muted)]">
+      <footer className="w-full max-w-6xl mx-auto pt-2 pb-1 flex items-center justify-between text-[12px] text-[var(--text-muted)] shrink-0">
         <span>Team Boards</span>
         <span>Keyboard-first project & issue tracking</span>
       </footer>
