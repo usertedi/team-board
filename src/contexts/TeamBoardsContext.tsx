@@ -143,6 +143,7 @@ const TeamBoardsContext = createContext<TeamBoardsContextValue | undefined>(
 
 const STORAGE_KEY = 'team_boards_state_v4';
 const CHANNEL_NAME = 'team_boards_realtime_sync';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 export const TeamBoardsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -299,7 +300,7 @@ export const TeamBoardsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [userWorkspaces, activeWorkspaceId, bundle.boards]);
 
-  // Persist to localStorage & broadcast across tabs via BroadcastChannel for instant Realtime sync
+  // Persist to localStorage, Render Backend API (/api/state), & BroadcastChannel
   const persistAndBroadcast = useCallback(
     (updater: (prev: SeedBundle) => SeedBundle) => {
       setBundle((prev) => {
@@ -314,12 +315,48 @@ export const TeamBoardsProvider: React.FC<{ children: React.ReactNode }> = ({
         } catch {
           // ignore
         }
+        // Push updated state to Render backend (or local Express /api/state)
+        fetch(`${API_BASE_URL}/api/state`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bundle: next }),
+        }).catch(() => {
+          // ignore network error when offline
+        });
         queryClient.invalidateQueries({ queryKey: ['workspace', activeWorkspaceId] });
         return next;
       });
     },
     [activeWorkspaceId, queryClient]
   );
+
+  // Hydrate from Render Backend (/api/state) on mount if available
+  useEffect(() => {
+    let active = true;
+    fetch(`${API_BASE_URL}/api/state`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (
+          active &&
+          data?.bundle &&
+          Array.isArray(data.bundle.workspaces) &&
+          data.bundle.workspaces.length > 0
+        ) {
+          setBundle(data.bundle);
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.bundle));
+          } catch {
+            // ignore
+          }
+        }
+      })
+      .catch(() => {
+        // Fallback to local state if backend is unreachable
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Listen to online/offline & multi-tab BroadcastChannel + URL deep link parsing
   useEffect(() => {
